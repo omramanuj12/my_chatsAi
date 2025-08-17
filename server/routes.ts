@@ -39,14 +39,18 @@ export async function registerRoutes(app: Express): Promise<Server> {
 
       const { sessionId, message, apiKey, provider = "openai" } = result.data;
 
+      console.log(`Chat request - Provider: ${provider}, API Key prefix: ${apiKey.substring(0, 10)}...`);
+
       // Create AI client based on provider
       let aiClient;
       if (provider === "deepseek") {
+        console.log("Using DeepSeek API endpoint");
         aiClient = new OpenAI({ 
           apiKey,
           baseURL: "https://api.deepseek.com"
         });
       } else {
+        console.log("Using OpenAI API endpoint");
         aiClient = new OpenAI({ apiKey });
       }
 
@@ -143,16 +147,20 @@ export async function registerRoutes(app: Express): Promise<Server> {
         return res.status(400).json({ message: "API key is required" });
       }
 
+      console.log(`API Key test - Provider: ${provider}, API Key prefix: ${apiKey.substring(0, 10)}...`);
+
       let aiClient;
       let modelName;
       
       if (provider === "deepseek") {
+        console.log("Testing DeepSeek API key");
         aiClient = new OpenAI({ 
           apiKey,
           baseURL: "https://api.deepseek.com"
         });
         modelName = "deepseek-chat";
       } else {
+        console.log("Testing OpenAI API key");
         aiClient = new OpenAI({ apiKey });
         modelName = "gpt-4o";
       }
