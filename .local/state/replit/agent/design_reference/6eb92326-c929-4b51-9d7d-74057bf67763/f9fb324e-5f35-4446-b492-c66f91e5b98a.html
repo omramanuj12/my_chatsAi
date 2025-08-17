@@ -1,0 +1,441 @@
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>AI Chat Application</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script>
+        tailwind.config = {
+            theme: {
+                extend: {
+                    fontFamily: {
+                        'inter': ['Inter', 'system-ui', 'sans-serif']
+                    },
+                    animation: {
+                        'fade-in': 'fadeIn 0.3s ease-in-out',
+                        'slide-up': 'slideUp 0.3s ease-out',
+                        'pulse-dot': 'pulseDot 1.5s infinite'
+                    },
+                    keyframes: {
+                        fadeIn: {
+                            '0%': { opacity: '0' },
+                            '100%': { opacity: '1' }
+                        },
+                        slideUp: {
+                            '0%': { transform: 'translateY(10px)', opacity: '0' },
+                            '100%': { transform: 'translateY(0)', opacity: '1' }
+                        },
+                        pulseDot: {
+                            '0%, 20%': { opacity: '0' },
+                            '50%': { opacity: '1' },
+                            '80%, 100%': { opacity: '0' }
+                        }
+                    }
+                }
+            }
+        };
+    </script>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+</head>
+<body class="font-inter bg-gray-50 h-screen overflow-hidden">
+    
+    <!-- @COMPONENT: MainLayout [Main application container with sidebar and chat area] -->
+    <div class="flex h-screen">
+        
+        <!-- @COMPONENT: Sidebar [Settings and chat history panel] -->
+        <div id="sidebar" class="w-80 bg-white border-r border-gray-200 flex flex-col transform transition-transform duration-300 lg:translate-x-0 -translate-x-full absolute lg:relative z-30 h-full">
+            
+            <!-- Sidebar Header -->
+            <div class="p-6 border-b border-gray-200">
+                <div class="flex items-center justify-between">
+                    <h1 class="text-xl font-semibold text-gray-900">AI Chat</h1>
+                    <button id="closeSidebar" class="lg:hidden text-gray-500 hover:text-gray-700">
+                        <i class="fas fa-times text-lg"></i>
+                    </button>
+                </div>
+            </div>
+            
+            <!-- API Key Configuration -->
+            <!-- @COMPONENT: APIKeySettings [API key input and management] -->
+            <div class="p-6 border-b border-gray-200">
+                <h3 class="text-sm font-medium text-gray-900 mb-3">API Configuration</h3>
+                <div class="space-y-3">
+                    <div>
+                        <label for="apiKey" class="block text-xs font-medium text-gray-700 mb-1">API Key</label>
+                        <div class="relative">
+                            <input 
+                                type="password" 
+                                id="apiKey" 
+                                placeholder="Enter your API key"
+                                class="w-full px-3 py-2 border border-gray-300 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                                data-bind="apiKey"
+                                data-implementation="Should validate API key format and store securely in session"
+                            >
+                            <button type="button" id="toggleApiKey" class="absolute right-2 top-2 text-gray-400 hover:text-gray-600">
+                                <i class="fas fa-eye text-sm"></i>
+                            </button>
+                        </div>
+                    </div>
+                    <div class="flex space-x-2">
+                        <button 
+                            id="saveApiKey"
+                            class="flex-1 bg-blue-600 text-white px-3 py-2 rounded-lg text-xs font-medium hover:bg-blue-700 transition-colors"
+                            data-event="click:handleSaveApiKey"
+                        >
+                            Save Key
+                        </button>
+                        <button 
+                            id="testApiKey"
+                            class="flex-1 bg-gray-100 text-gray-700 px-3 py-2 rounded-lg text-xs font-medium hover:bg-gray-200 transition-colors"
+                            data-event="click:handleTestApiKey"
+                        >
+                            Test
+                        </button>
+                    </div>
+                    <!-- API Key Status -->
+                    <div id="apiKeyStatus" class="hidden">
+                        <div class="flex items-center space-x-2 text-xs">
+                            <div class="w-2 h-2 bg-green-500 rounded-full"></div>
+                            <span class="text-green-700">API key validated</span>
+                        </div>
+                    </div>
+                </div>
+            </div>
+            
+            <!-- Chat History -->
+            <!-- @COMPONENT: ChatHistory [Previous chat sessions list] -->
+            <div class="flex-1 overflow-y-auto">
+                <div class="p-6">
+                    <div class="flex items-center justify-between mb-4">
+                        <h3 class="text-sm font-medium text-gray-900">Chat History</h3>
+                        <button 
+                            id="clearHistory"
+                            class="text-xs text-gray-500 hover:text-red-600 transition-colors"
+                            data-event="click:handleClearHistory"
+                        >
+                            Clear All
+                        </button>
+                    </div>
+                    
+                    <!-- @MAP: chatSessions.map(session => ( -->
+                    <div class="space-y-2" data-mock="true">
+                        <div class="p-3 bg-gray-50 rounded-lg hover:bg-gray-100 cursor-pointer transition-colors">
+                            <div class="text-sm font-medium text-gray-900 mb-1">Chat Session 1</div>
+                            <div class="text-xs text-gray-500 truncate">Tell me about machine learning...</div>
+                            <div class="text-xs text-gray-400 mt-1">2 hours ago</div>
+                        </div>
+                        <div class="p-3 bg-gray-50 rounded-lg hover:bg-gray-100 cursor-pointer transition-colors">
+                            <div class="text-sm font-medium text-gray-900 mb-1">Chat Session 2</div>
+                            <div class="text-xs text-gray-500 truncate">How do I implement a REST API...</div>
+                            <div class="text-xs text-gray-400 mt-1">1 day ago</div>
+                        </div>
+                        <div class="p-3 bg-gray-50 rounded-lg hover:bg-gray-100 cursor-pointer transition-colors">
+                            <div class="text-sm font-medium text-gray-900 mb-1">Chat Session 3</div>
+                            <div class="text-xs text-gray-500 truncate">Explain quantum computing...</div>
+                            <div class="text-xs text-gray-400 mt-1">3 days ago</div>
+                        </div>
+                    </div>
+                    <!-- @END_MAP )) -->
+                </div>
+            </div>
+            
+            <!-- Sidebar Footer -->
+            <div class="p-6 border-t border-gray-200">
+                <button 
+                    id="newChat"
+                    class="w-full bg-blue-600 text-white px-4 py-3 rounded-lg font-medium hover:bg-blue-700 transition-colors flex items-center justify-center space-x-2"
+                    data-event="click:handleNewChat"
+                >
+                    <i class="fas fa-plus text-sm"></i>
+                    <span>New Chat</span>
+                </button>
+            </div>
+        </div>
+        <!-- @END_COMPONENT: Sidebar -->
+        
+        <!-- Sidebar Overlay for Mobile -->
+        <div id="sidebarOverlay" class="fixed inset-0 bg-black bg-opacity-50 z-20 lg:hidden hidden"></div>
+        
+        <!-- @COMPONENT: ChatArea [Main chat interface] -->
+        <div class="flex-1 flex flex-col h-full">
+            
+            <!-- Chat Header -->
+            <div class="bg-white border-b border-gray-200 px-6 py-4">
+                <div class="flex items-center justify-between">
+                    <div class="flex items-center space-x-3">
+                        <button id="openSidebar" class="lg:hidden text-gray-500 hover:text-gray-700">
+                            <i class="fas fa-bars text-lg"></i>
+                        </button>
+                        <div>
+                            <h2 class="text-lg font-semibold text-gray-900">AI Assistant</h2>
+                            <div class="flex items-center space-x-2 text-sm text-gray-500">
+                                <div class="w-2 h-2 bg-green-500 rounded-full"></div>
+                                <span data-bind="connectionStatus">Online</span>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="flex items-center space-x-3">
+                        <button 
+                            id="exportChat"
+                            class="text-gray-500 hover:text-gray-700 transition-colors"
+                            data-event="click:handleExportChat"
+                            title="Export Chat"
+                        >
+                            <i class="fas fa-download"></i>
+                        </button>
+                        <button 
+                            id="clearCurrentChat"
+                            class="text-gray-500 hover:text-red-600 transition-colors"
+                            data-event="click:handleClearCurrentChat"
+                            title="Clear Current Chat"
+                        >
+                            <i class="fas fa-trash"></i>
+                        </button>
+                    </div>
+                </div>
+            </div>
+            
+            <!-- Chat Messages Area -->
+            <!-- @COMPONENT: MessagesContainer [Scrollable container for chat messages] -->
+            <div id="messagesContainer" class="flex-1 overflow-y-auto p-6 space-y-4">
+                
+                <!-- Welcome Message -->
+                <div class="flex justify-center" data-mock="true">
+                    <div class="max-w-md text-center">
+                        <div class="w-16 h-16 bg-blue-100 rounded-full flex items-center justify-center mx-auto mb-4">
+                            <i class="fas fa-robot text-2xl text-blue-600"></i>
+                        </div>
+                        <h3 class="text-lg font-semibold text-gray-900 mb-2">Welcome to AI Chat</h3>
+                        <p class="text-gray-600 text-sm">Start a conversation by typing your message below. Make sure to configure your API key in the sidebar first.</p>
+                    </div>
+                </div>
+                
+                <!-- @MAP: messages.map(message => ( -->
+                <!-- User Message Example -->
+                <div class="flex justify-end animate-slide-up" data-mock="true">
+                    <div class="max-w-xs lg:max-w-md">
+                        <div class="bg-blue-600 text-white px-4 py-3 rounded-2xl rounded-br-md">
+                            <p class="text-sm" data-bind="message.content">Can you explain how machine learning works?</p>
+                        </div>
+                        <div class="text-xs text-gray-500 mt-1 text-right" data-bind="message.timestamp">2:34 PM</div>
+                    </div>
+                </div>
+                
+                <!-- AI Message Example -->
+                <div class="flex justify-start animate-slide-up" data-mock="true">
+                    <div class="max-w-xs lg:max-w-md">
+                        <div class="flex items-start space-x-2">
+                            <div class="w-8 h-8 bg-gray-100 rounded-full flex items-center justify-center flex-shrink-0 mt-1">
+                                <i class="fas fa-robot text-sm text-gray-600"></i>
+                            </div>
+                            <div>
+                                <div class="bg-white border border-gray-200 px-4 py-3 rounded-2xl rounded-bl-md shadow-sm">
+                                    <p class="text-sm text-gray-900" data-bind="message.content">Machine learning is a subset of artificial intelligence that enables computers to learn and improve from experience without being explicitly programmed. It works by using algorithms to analyze data, identify patterns, and make predictions or decisions.</p>
+                                </div>
+                                <div class="text-xs text-gray-500 mt-1" data-bind="message.timestamp">2:34 PM</div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+                
+                <!-- Loading Message -->
+                <div id="loadingMessage" class="flex justify-start hidden">
+                    <div class="max-w-xs lg:max-w-md">
+                        <div class="flex items-start space-x-2">
+                            <div class="w-8 h-8 bg-gray-100 rounded-full flex items-center justify-center flex-shrink-0 mt-1">
+                                <i class="fas fa-robot text-sm text-gray-600"></i>
+                            </div>
+                            <div>
+                                <div class="bg-white border border-gray-200 px-4 py-3 rounded-2xl rounded-bl-md shadow-sm">
+                                    <div class="flex items-center space-x-1">
+                                        <div class="w-2 h-2 bg-gray-400 rounded-full animate-pulse-dot"></div>
+                                        <div class="w-2 h-2 bg-gray-400 rounded-full animate-pulse-dot" style="animation-delay: 0.2s;"></div>
+                                        <div class="w-2 h-2 bg-gray-400 rounded-full animate-pulse-dot" style="animation-delay: 0.4s;"></div>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+                <!-- @END_MAP )) -->
+                
+            </div>
+            
+            <!-- Error Messages -->
+            <!-- @COMPONENT: ErrorDisplay [Error notification area] -->
+            <div id="errorContainer" class="hidden px-6 py-3 bg-red-50 border-t border-red-200">
+                <div class="flex items-center space-x-2 text-red-700">
+                    <i class="fas fa-exclamation-triangle text-sm"></i>
+                    <span id="errorMessage" class="text-sm">Error message will appear here</span>
+                    <button id="dismissError" class="ml-auto text-red-500 hover:text-red-700">
+                        <i class="fas fa-times text-sm"></i>
+                    </button>
+                </div>
+            </div>
+            
+            <!-- Chat Input Area -->
+            <!-- @COMPONENT: MessageInput [Message composition and sending interface] -->
+            <div class="bg-white border-t border-gray-200 p-6">
+                <div class="flex items-end space-x-4">
+                    <div class="flex-1">
+                        <div class="relative">
+                            <textarea 
+                                id="messageInput"
+                                placeholder="Type your message here..."
+                                class="w-full px-4 py-3 pr-12 border border-gray-300 rounded-2xl resize-none focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent max-h-32 min-h-[3rem]"
+                                rows="1"
+                                data-bind="currentMessage"
+                                data-implementation="Should auto-resize based on content and handle Enter key for sending"
+                            ></textarea>
+                            <button 
+                                id="attachFile"
+                                class="absolute right-3 bottom-3 text-gray-400 hover:text-gray-600 transition-colors"
+                                data-event="click:handleAttachFile"
+                                title="Attach File"
+                            >
+                                <i class="fas fa-paperclip"></i>
+                            </button>
+                        </div>
+                    </div>
+                    <button 
+                        id="sendMessage"
+                        class="bg-blue-600 text-white w-12 h-12 rounded-full flex items-center justify-center hover:bg-blue-700 transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
+                        data-event="click:handleSendMessage"
+                        data-implementation="Should validate message and API key before sending"
+                    >
+                        <i class="fas fa-paper-plane"></i>
+                    </button>
+                </div>
+                
+                <!-- Input Footer -->
+                <div class="flex items-center justify-between mt-3 text-xs text-gray-500">
+                    <div class="flex items-center space-x-4">
+                        <span>Press Enter to send, Shift+Enter for new line</span>
+                    </div>
+                    <div class="flex items-center space-x-2">
+                        <span id="characterCount" data-bind="messageLength">0</span>
+                        <span>/</span>
+                        <span>4000</span>
+                    </div>
+                </div>
+            </div>
+            
+        </div>
+        <!-- @END_COMPONENT: ChatArea -->
+        
+    </div>
+    <!-- @END_COMPONENT: MainLayout -->
+    
+    <!-- @FUNCTIONALITY: This chat application should implement real-time messaging with AI API integration -->
+    <script>
+        (function() {
+            // TODO: Implement business logic, API calls, and state management
+            
+            // DOM elements
+            const sidebar = document.getElementById('sidebar');
+            const sidebarOverlay = document.getElementById('sidebarOverlay');
+            const openSidebarBtn = document.getElementById('openSidebar');
+            const closeSidebarBtn = document.getElementById('closeSidebar');
+            const messageInput = document.getElementById('messageInput');
+            const sendButton = document.getElementById('sendMessage');
+            const messagesContainer = document.getElementById('messagesContainer');
+            const apiKeyInput = document.getElementById('apiKey');
+            const toggleApiKeyBtn = document.getElementById('toggleApiKey');
+            const errorContainer = document.getElementById('errorContainer');
+            const loadingMessage = document.getElementById('loadingMessage');
+            
+            // Sidebar toggle functionality
+            openSidebarBtn.addEventListener('click', function() {
+                sidebar.classList.remove('-translate-x-full');
+                sidebarOverlay.classList.remove('hidden');
+            });
+            
+            closeSidebarBtn.addEventListener('click', function() {
+                sidebar.classList.add('-translate-x-full');
+                sidebarOverlay.classList.add('hidden');
+            });
+            
+            sidebarOverlay.addEventListener('click', function() {
+                sidebar.classList.add('-translate-x-full');
+                sidebarOverlay.classList.add('hidden');
+            });
+            
+            // API key visibility toggle
+            toggleApiKeyBtn.addEventListener('click', function() {
+                const type = apiKeyInput.type === 'password' ? 'text' : 'password';
+                apiKeyInput.type = type;
+                const icon = this.querySelector('i');
+                icon.classList.toggle('fa-eye');
+                icon.classList.toggle('fa-eye-slash');
+            });
+            
+            // Auto-resize textarea
+            messageInput.addEventListener('input', function() {
+                this.style.height = 'auto';
+                this.style.height = Math.min(this.scrollHeight, 128) + 'px';
+                
+                // Update character count
+                const charCount = document.getElementById('characterCount');
+                if (charCount) {
+                    charCount.textContent = this.value.length;
+                }
+            });
+            
+            // Handle Enter key for sending messages
+            messageInput.addEventListener('keydown', function(e) {
+                if (e.key === 'Enter' && !e.shiftKey) {
+                    e.preventDefault();
+                    sendMessage();
+                }
+            });
+            
+            // Send message functionality
+            sendButton.addEventListener('click', sendMessage);
+            
+            function sendMessage() {
+                const message = messageInput.value.trim();
+                if (!message) return;
+                
+                // TODO: Validate API key
+                // TODO: Add user message to chat
+                // TODO: Send request to AI API
+                // TODO: Handle response and add AI message
+                // TODO: Handle errors
+                
+                // Clear input
+                messageInput.value = '';
+                messageInput.style.height = 'auto';
+                document.getElementById('characterCount').textContent = '0';
+            }
+            
+            // Error handling
+            function showError(message) {
+                const errorContainer = document.getElementById('errorContainer');
+                const errorMessage = document.getElementById('errorMessage');
+                errorMessage.textContent = message;
+                errorContainer.classList.remove('hidden');
+            }
+            
+            function hideError() {
+                errorContainer.classList.add('hidden');
+            }
+            
+            document.getElementById('dismissError').addEventListener('click', hideError);
+            
+            // Auto-hide errors after 5 seconds
+            let errorTimeout;
+            function showErrorWithTimeout(message) {
+                showError(message);
+                clearTimeout(errorTimeout);
+                errorTimeout = setTimeout(hideError, 5000);
+            }
+            
+            // Sample error for demonstration
+            // showErrorWithTimeout('Please configure your API key to start chatting.');
+            
+        })();
+    </script>
+    
+</body>
+</html>
