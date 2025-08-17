@@ -5,6 +5,7 @@ import { ChatArea } from "@/components/chat/chat-area";
 export default function Chat() {
   const [currentSessionId, setCurrentSessionId] = useState<string | null>(null);
   const [apiKey, setApiKey] = useState<string>("");
+  const [provider, setProvider] = useState<string>("openai");
   const [sidebarOpen, setSidebarOpen] = useState(false);
 
   return (
@@ -14,6 +15,8 @@ export default function Chat() {
         setCurrentSessionId={setCurrentSessionId}
         apiKey={apiKey}
         setApiKey={setApiKey}
+        provider={provider}
+        setProvider={setProvider}
         sidebarOpen={sidebarOpen}
         setSidebarOpen={setSidebarOpen}
       />
@@ -30,6 +33,7 @@ export default function Chat() {
         currentSessionId={currentSessionId}
         setCurrentSessionId={setCurrentSessionId}
         apiKey={apiKey}
+        provider={provider}
         setSidebarOpen={setSidebarOpen}
       />
     </div>

@@ -39,6 +39,7 @@ export const sendMessageSchema = z.object({
   sessionId: z.string().optional(),
   message: z.string().min(1).max(4000),
   apiKey: z.string().min(1),
+  provider: z.enum(["openai", "deepseek"]).default("openai"),
 });
 
 export const chatResponseSchema = z.object({

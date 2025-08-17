@@ -12,6 +12,7 @@ interface ChatAreaProps {
   currentSessionId: string | null;
   setCurrentSessionId: (id: string | null) => void;
   apiKey: string;
+  provider: string;
   setSidebarOpen: (open: boolean) => void;
 }
 
@@ -19,6 +20,7 @@ export function ChatArea({
   currentSessionId,
   setCurrentSessionId,
   apiKey,
+  provider,
   setSidebarOpen,
 }: ChatAreaProps) {
   const { toast } = useToast();
@@ -146,6 +148,7 @@ export function ChatArea({
         currentSessionId={currentSessionId}
         setCurrentSessionId={setCurrentSessionId}
         apiKey={apiKey}
+        provider={provider}
       />
       
     </div>

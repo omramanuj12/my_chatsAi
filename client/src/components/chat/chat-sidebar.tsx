@@ -8,6 +8,8 @@ interface ChatSidebarProps {
   setCurrentSessionId: (id: string | null) => void;
   apiKey: string;
   setApiKey: (key: string) => void;
+  provider: string;
+  setProvider: (provider: string) => void;
   sidebarOpen: boolean;
   setSidebarOpen: (open: boolean) => void;
 }
@@ -17,6 +19,8 @@ export function ChatSidebar({
   setCurrentSessionId,
   apiKey,
   setApiKey,
+  provider,
+  setProvider,
   sidebarOpen,
   setSidebarOpen,
 }: ChatSidebarProps) {
@@ -45,7 +49,12 @@ export function ChatSidebar({
       
       {/* API Key Configuration */}
       <div className="p-6 border-b border-gray-200">
-        <ApiKeySettings apiKey={apiKey} setApiKey={setApiKey} />
+        <ApiKeySettings 
+          apiKey={apiKey} 
+          setApiKey={setApiKey}
+          provider={provider}
+          setProvider={setProvider}
+        />
       </div>
       
       {/* Chat History */}

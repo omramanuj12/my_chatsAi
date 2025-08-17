@@ -37,10 +37,18 @@ export async function registerRoutes(app: Express): Promise<Server> {
         return res.status(400).json({ message: "Invalid request data", errors: result.error.errors });
       }
 
-      const { sessionId, message, apiKey } = result.data;
+      const { sessionId, message, apiKey, provider = "openai" } = result.data;
 
-      // Create OpenAI client with user's API key
-      const openai = new OpenAI({ apiKey });
+      // Create AI client based on provider
+      let aiClient;
+      if (provider === "deepseek") {
+        aiClient = new OpenAI({ 
+          apiKey,
+          baseURL: "https://api.deepseek.com"
+        });
+      } else {
+        aiClient = new OpenAI({ apiKey });
+      }
 
       let currentSessionId = sessionId;
 
@@ -77,9 +85,9 @@ export async function registerRoutes(app: Express): Promise<Server> {
       ];
 
       // Get AI response
-      // the newest OpenAI model is "gpt-4o" which was released May 13, 2024. do not change this unless explicitly requested by the user
-      const completion = await openai.chat.completions.create({
-        model: "gpt-4o",
+      const modelName = provider === "deepseek" ? "deepseek-chat" : "gpt-4o";
+      const completion = await aiClient.chat.completions.create({
+        model: modelName,
         messages,
         max_tokens: 1000,
         temperature: 0.7,
@@ -130,16 +138,28 @@ export async function registerRoutes(app: Express): Promise<Server> {
   // Test API key
   app.post("/api/chat/test-key", async (req, res) => {
     try {
-      const { apiKey } = req.body;
+      const { apiKey, provider = "openai" } = req.body;
       if (!apiKey) {
         return res.status(400).json({ message: "API key is required" });
       }
 
-      const openai = new OpenAI({ apiKey });
+      let aiClient;
+      let modelName;
+      
+      if (provider === "deepseek") {
+        aiClient = new OpenAI({ 
+          apiKey,
+          baseURL: "https://api.deepseek.com"
+        });
+        modelName = "deepseek-chat";
+      } else {
+        aiClient = new OpenAI({ apiKey });
+        modelName = "gpt-4o";
+      }
       
       // Make a simple test request
-      await openai.chat.completions.create({
-        model: "gpt-4o",
+      await aiClient.chat.completions.create({
+        model: modelName,
         messages: [{ role: "user", content: "Hello" }],
         max_tokens: 1,
       });

@@ -2,6 +2,7 @@ import { useState } from "react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Eye, EyeOff, Check } from "lucide-react";
 import { useMutation } from "@tanstack/react-query";
 import { apiRequest } from "@/lib/queryClient";
@@ -10,9 +11,11 @@ import { useToast } from "@/hooks/use-toast";
 interface ApiKeySettingsProps {
   apiKey: string;
   setApiKey: (key: string) => void;
+  provider: string;
+  setProvider: (provider: string) => void;
 }
 
-export function ApiKeySettings({ apiKey, setApiKey }: ApiKeySettingsProps) {
+export function ApiKeySettings({ apiKey, setApiKey, provider, setProvider }: ApiKeySettingsProps) {
   const [tempApiKey, setTempApiKey] = useState(apiKey);
   const [showApiKey, setShowApiKey] = useState(false);
   const [isValidated, setIsValidated] = useState(false);
@@ -21,7 +24,7 @@ export function ApiKeySettings({ apiKey, setApiKey }: ApiKeySettingsProps) {
   // Test API key mutation
   const testApiKeyMutation = useMutation({
     mutationFn: async (key: string) => {
-      const response = await apiRequest("POST", "/api/chat/test-key", { apiKey: key });
+      const response = await apiRequest("POST", "/api/chat/test-key", { apiKey: key, provider });
       return response.json();
     },
     onSuccess: () => {
@@ -84,6 +87,23 @@ export function ApiKeySettings({ apiKey, setApiKey }: ApiKeySettingsProps) {
       <h3 className="text-sm font-medium text-gray-900 mb-3">API Configuration</h3>
       <div className="space-y-3">
         <div>
+          <Label htmlFor="provider" className="block text-xs font-medium text-gray-700 mb-1">
+            AI Provider
+          </Label>
+          <Select value={provider} onValueChange={(value) => {
+            setProvider(value);
+            setIsValidated(false);
+          }}>
+            <SelectTrigger className="w-full">
+              <SelectValue placeholder="Select AI provider" />
+            </SelectTrigger>
+            <SelectContent>
+              <SelectItem value="openai">OpenAI (GPT-4)</SelectItem>
+              <SelectItem value="deepseek">DeepSeek</SelectItem>
+            </SelectContent>
+          </Select>
+        </div>
+        <div>
           <Label htmlFor="apiKey" className="block text-xs font-medium text-gray-700 mb-1">
             API Key
           </Label>
@@ -96,7 +116,7 @@ export function ApiKeySettings({ apiKey, setApiKey }: ApiKeySettingsProps) {
                 setTempApiKey(e.target.value);
                 setIsValidated(false);
               }}
-              placeholder="Enter your API key"
+              placeholder={provider === "deepseek" ? "Enter your DeepSeek API key" : "Enter your OpenAI API key"}
               className="w-full px-3 py-2 pr-8 border border-gray-300 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent"
             />
             <Button

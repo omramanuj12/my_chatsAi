@@ -11,12 +11,14 @@ interface MessageInputProps {
   currentSessionId: string | null;
   setCurrentSessionId: (id: string | null) => void;
   apiKey: string;
+  provider: string;
 }
 
 export function MessageInput({
   currentSessionId,
   setCurrentSessionId,
   apiKey,
+  provider,
 }: MessageInputProps) {
   const [message, setMessage] = useState("");
   const [isLoading, setIsLoading] = useState(false);
@@ -35,7 +37,7 @@ export function MessageInput({
 
   // Send message mutation
   const sendMessageMutation = useMutation({
-    mutationFn: async (data: { sessionId?: string; message: string; apiKey: string }) => {
+    mutationFn: async (data: { sessionId?: string; message: string; apiKey: string; provider: string }) => {
       const response = await apiRequest("POST", "/api/chat/send", data);
       return response.json() as Promise<ChatResponse>;
     },
@@ -101,6 +103,7 @@ export function MessageInput({
       sessionId: currentSessionId || undefined,
       message: trimmedMessage,
       apiKey,
+      provider,
     });
   };
 
